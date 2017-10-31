@@ -16,17 +16,10 @@ return	output image
 */
 Mat Dip1::doSomethingThatMyTutorIsGonnaLike(Mat& img){
   
-	
 	// those are the min and max threshold for Canny detector, but a "normalized" version, they should be between [0..1]
 	double minThreshold, maxThreshold;
 	maxThreshold = 0.25;
 	minThreshold = 0.08;
-
-	//max = 0.25;
-	//min = 0.08;
-
-	//max = 0.25;
-	//min = 0.10;
 
 	cvtColor(img, img, CV_BGR2GRAY);
 	GaussianBlur(img, img, Size(5, 5), 1.4, 1.4);
