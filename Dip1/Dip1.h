@@ -29,7 +29,12 @@ class Dip1{
 		// function that performs some kind of (simple) image processing
 		// --> please edit ONLY these functions!
 		Mat doSomethingThatMyTutorIsGonnaLike(Mat&);
+		void transformImageToPolarForm(Mat& img, Mat& G, Mat& theta);
+		void nonMaximumSuppression(Mat& img, Mat& theta);
 		int roundOrientation(float o);
+		void normalizeGradientImage(Mat& img);
+		Mat minMaxThresholding(Mat& img, double min, double max);
+		void edgesTrackingBetweenThresholds(Mat& gradiant, Mat& result, double min, double max, int minCahngedPixelsLimit = 50);
 
 		// test function
 		void test_doSomethingThatMyTutorIsGonnaLike(Mat&, Mat&);

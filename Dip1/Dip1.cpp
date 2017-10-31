@@ -16,182 +16,94 @@ return	output image
 */
 Mat Dip1::doSomethingThatMyTutorIsGonnaLike(Mat& img){
   
-	Mat Gx, Gy, G, theta;
-	try
-	{
-		cvtColor(img, img, CV_BGR2GRAY);
-		GaussianBlur(img, img, Size(5, 5), 1.4, 1.4);
-		Mat xKernel = (Mat_<int>(3, 3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
-		Mat yKernel = xKernel.t();
-		Mat intImage;
-		img.convertTo(intImage, CV_32F);
-		filter2D(intImage, Gx, -1, xKernel);
-		filter2D(intImage, Gy, -1, yKernel);
-
-/*		Mat r,x,y;
-		Gx.convertTo(x, CV_16SC1);
-		Gy.convertTo(y, CV_16SC1);
-		Canny(x, y,r, 100, 80);
-		return r*/;
-		//double min2, max2, overAllMax2;
-		//minMaxLoc(Gx, &min2, &max2);
-		//Mat ff = (Gx - min2) / (max2 - min2);
-		//return ff;
-		
-		//Mat x, y;
-		//Gx.convertTo(x, CV_32F);
-		//Gy.convertTo(y, CV_32F);
-		
-		cartToPolar(Gx, Gy, G, theta, true);
-		
-		//double min1, max1;
-		//minMaxLoc(G, &min1, &max1);
-		
-		//Mat G1 = (G - min1) / (max1-min1);
-		//return G1;
-
-		for (int i = 0; i < G.rows; i++) {
-			for (int j = 0; j < G.cols; j++) {
-				int orientation = Dip1::roundOrientation(theta.at<float>(i, j));
-				int i1, i2, j1, j2;
-				switch (orientation) {
-				case 0 :
-					j1 = j - 1;
-					j2 = j + 1;
-					i1 = i2 = i;
-					break;
-				case 45:
-					i1 = i + 1;
-					j1 = j + 1;
-					i2 = i - 1;
-					j2 = j - 1;
-					break;
-				case 90:
-					i1 = i - 1;
-					i2 = i + 1;
-					j1 = j2 = j;
-					break;
-				default:
-					i1 = i + 1;
-					j1 = j - 1;
-					i2 = i - 1;
-					j2 = j + 1;
-				}
-				float p1, p2;
-				if (i1 < 0 || i1 == G.rows || j1 < 0 || j1 == G.cols) {
-					p1 = -1;
-				}
-				else {
-					p1 = G.at<float>(i1, j1);
-				}
-				if (i2 < 0 || i2 == G.rows || j2 < 0 || j2 == G.cols) {
-					p2 = -1;
-				}
-				else {
-					p2 = G.at<float>(i2, j2);
-				}
-				float p = G.at<float>(i, j);
-				if (p < p1 || p < p2) {
-					G.at<float>(i, j) = 0;
-				}
-			}
-		}
-
-		//Mat G1 = (G - min1) / (max1 - min1);
-		//return G1;
-
-		double min, max;
-		minMaxLoc(G, &min, &max);
-		//overAllMax = max;
-		Mat result = Mat::zeros(G.rows, G.cols, CV_8U);
-		G = G / max;
-
-		minMaxLoc(G, &min, &max);
-		//return G;
-
-		max = 0.25;
-		min = 0.08;
-
-		//max = 0.25;
-		//min = 0.08;
-
-		//max = 0.25;
-		//min = 0.10;
-
-		//min = 40;
-		for (int i = 0; i < G.rows; i++) {
-			for (int j = 0; j < G.cols; j++) {
-				float p = G.at<float>(i, j);
-				if (p < min) {
-					G.at<float>(i, j) = 0;
-				}
-				else if (p > max) {
-					result.at<uchar>(i, j) = 255;
-					G.at<float>(i, j) = 1;
-				}
-			}
-		}
-
-		//Mat G1 = G / overAllMax;
-		//return G1;
-
-		int flippedPixels = 0;
-		Mat tempG;
-		G.copyTo(tempG);
-		do {
-			flippedPixels = 0;
-			tempG.copyTo(G);
-			for (int i = 0; i < G.rows; i++) {
-				for (int j = 0; j < G.cols; j++) {
-					if (G.at<float>(i, j) == 1 || G.at<float>(i, j) == 0) {
-						continue;
-					}
-					int iMaskStart = i - 1;
-					int iMaskend = i + 1;
-					int jMaskStart = j - 1;
-					int jMaskend = j + 1;
-					if (iMaskStart < 0) {
-						iMaskStart = 0;
-					}
-					else if (iMaskend == G.rows) {
-						iMaskend = G.rows - 1;
-					}
-					if (jMaskStart < 0) {
-						jMaskStart = 0;
-					}
-					else if (jMaskend == G.cols) {
-						jMaskend = G.cols - 1;
-					}
-
-					for (int iMask = iMaskStart; iMask <= iMaskend; iMask++) {
-						for (int jMask = jMaskStart; jMask <= jMaskend; jMask++) {
-							if (G.at<float>(iMask, jMask) == 1) {
-								result.at<uchar>(i, j) = 255;
-								tempG.at<float>(i, j) = 1;
-								iMask = iMaskend + 1;
-								jMask = jMaskend + 1;
-								flippedPixels += 1;
-							}
-						}
-					}
-				}
-			}
-		} while (flippedPixels > 50);
-
-		//Mat G1 = G / overAllMax;
-		//return G1;
-
-		G = result;
-	}
-	catch (cv::Exception & e)
-	{
-		cerr << e.msg << endl; // output exception message
-	}
 	
-	// TO DO !!!
-	imwrite("../Lenna_result.jpg", G);
-	return G;
+	// those are the min and max threshold for Canny detector, but a "normalized" version, they should be between [0..1]
+	double minThreshold, maxThreshold;
+	maxThreshold = 0.25;
+	minThreshold = 0.08;
 
+	//max = 0.25;
+	//min = 0.08;
+
+	//max = 0.25;
+	//min = 0.10;
+
+	cvtColor(img, img, CV_BGR2GRAY);
+	GaussianBlur(img, img, Size(5, 5), 1.4, 1.4);
+
+	Mat gradient, theta;
+	transformImageToPolarForm(img, gradient, theta);
+	
+	nonMaximumSuppression(gradient, theta);
+	normalizeGradientImage(gradient);
+	
+	Mat result = minMaxThresholding(gradient, minThreshold, maxThreshold);
+	edgesTrackingBetweenThresholds(gradient, result, minThreshold, maxThreshold);
+
+	//imwrite("../Lenna_result.jpg", gradient);
+	return result;
+}
+
+void Dip1::transformImageToPolarForm(Mat& img, Mat& gradient, Mat& theta)
+{
+	Mat Gx, Gy;
+	Mat xKernel = (Mat_<int>(3, 3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
+	Mat yKernel = xKernel.t();
+	Mat floatImage;
+	img.convertTo(floatImage, CV_32F);
+	filter2D(floatImage, Gx, -1, xKernel);
+	filter2D(floatImage, Gy, -1, yKernel);
+	cartToPolar(Gx, Gy, gradient, theta, true);
+}
+
+void Dip1::nonMaximumSuppression(Mat& gradient, Mat& theta)
+{
+	for (int i = 0; i < gradient.rows; i++) {
+		for (int j = 0; j < gradient.cols; j++) {
+			int orientation = Dip1::roundOrientation(theta.at<float>(i, j));
+			int i1, i2, j1, j2;
+			switch (orientation) {
+			case 0:
+				j1 = j - 1;
+				j2 = j + 1;
+				i1 = i2 = i;
+				break;
+			case 45:
+				i1 = i + 1;
+				j1 = j + 1;
+				i2 = i - 1;
+				j2 = j - 1;
+				break;
+			case 90:
+				i1 = i - 1;
+				i2 = i + 1;
+				j1 = j2 = j;
+				break;
+			default:
+				i1 = i + 1;
+				j1 = j - 1;
+				i2 = i - 1;
+				j2 = j + 1;
+			}
+			float p1, p2;
+			if (i1 < 0 || i1 == gradient.rows || j1 < 0 || j1 == gradient.cols) {
+				p1 = -1;
+			}
+			else {
+				p1 = gradient.at<float>(i1, j1);
+			}
+			if (i2 < 0 || i2 == gradient.rows || j2 < 0 || j2 == gradient.cols) {
+				p2 = -1;
+			}
+			else {
+				p2 = gradient.at<float>(i2, j2);
+			}
+			float p = gradient.at<float>(i, j);
+			if (p < p1 || p < p2) {
+				gradient.at<float>(i, j) = 0;
+			}
+		}
+	}
 }
 
 int Dip1::roundOrientation(float o)
@@ -212,6 +124,81 @@ int Dip1::roundOrientation(float o)
 	int f = 0;
 	f += 1;
 	return 135;
+}
+
+void Dip1::normalizeGradientImage(Mat& img)
+{
+	double min, max;
+	minMaxLoc(img, &min, &max);
+	img = img / max;
+}
+
+Mat Dip1::minMaxThresholding(Mat& gradient, double min, double max)
+{
+	Mat result = Mat::zeros(gradient.rows, gradient.cols, CV_8U);
+	for (int i = 0; i < gradient.rows; i++) {
+		for (int j = 0; j < gradient.cols; j++) {
+			float p = gradient.at<float>(i, j);
+			if (p < min) {
+				gradient.at<float>(i, j) = 0;
+			}
+			else if (p > max) {
+				result.at<uchar>(i, j) = 255;
+				gradient.at<float>(i, j) = 1;
+			}
+		}
+	}
+
+	return result;
+}
+
+void Dip1::edgesTrackingBetweenThresholds(Mat& gradient, Mat& result, double min, double max, int minCahngedPixelsLimit)
+{
+	int flippedPixels = 0;
+	Mat tempGradient;
+	gradient.copyTo(tempGradient);
+	do {
+		flippedPixels = 0;
+		tempGradient.copyTo(gradient);
+		for (int i = 0; i < gradient.rows; i++) {
+			for (int j = 0; j < gradient.cols; j++) {
+				if (gradient.at<float>(i, j) == 1 || gradient.at<float>(i, j) == 0) {
+					continue;
+				}
+				int iMaskStart = i - 1;
+				int iMaskend = i + 1;
+				int jMaskStart = j - 1;
+				int jMaskend = j + 1;
+
+				if (iMaskStart < 0) {
+					iMaskStart = 0;
+				}
+				else if (iMaskend == gradient.rows) {
+					iMaskend = gradient.rows - 1;
+				}
+
+				if (jMaskStart < 0) {
+					jMaskStart = 0;
+				}
+				else if (jMaskend == gradient.cols) {
+					jMaskend = gradient.cols - 1;
+				}
+
+				for (int iMask = iMaskStart; iMask <= iMaskend; iMask++) {
+					for (int jMask = jMaskStart; jMask <= jMaskend; jMask++) {
+						if (gradient.at<float>(iMask, jMask) == 1) {
+							result.at<uchar>(i, j) = 255;
+							tempGradient.at<float>(i, j) = 1;
+							iMask = iMaskend + 1;
+							jMask = jMaskend + 1;
+							flippedPixels += 1;
+						}
+					}
+				}
+			}
+		}
+	} while (flippedPixels > minCahngedPixelsLimit);
+
 }
 /* *****************************
   GIVEN FUNCTIONS
